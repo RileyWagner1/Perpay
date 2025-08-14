@@ -1,4 +1,6 @@
+# frontend/llm_client.py
 import os, re, json
+from typing import List, Dict
 from openai import OpenAI
 
 OLLAMA_BASE = os.getenv("OLLAMA_BASE", "http://ollama:11434/v1")
@@ -15,6 +17,10 @@ def _extract_json(text: str) -> dict:
     except Exception:
         raw = raw.replace("’","'").replace("“","\"").replace("”","\"")
         return json.loads(raw)
+
+
+def _strip_think(text: str) -> str:
+    return THINK_BLOCK.sub("", text or "").strip()
 
 def extract_keywords(user_text: str, max_terms: int = 6) -> str:
     system = (
@@ -53,7 +59,7 @@ def extract_keywords(user_text: str, max_terms: int = 6) -> str:
             toks.append(t)
     return " ".join(toks)
 
-def summarize_products(original_query: str, keywords: str, items: list[dict]) -> str:
+def summarize_products(original_query: str, keywords: str, items: List[Dict]) -> str:
     simple = []
     for it in items[:5]:
         simple.append({k: it.get(k) for k in ["similarity","name","brand","current_price","product_url","product_id"] if k in it})
@@ -69,8 +75,8 @@ def summarize_products(original_query: str, keywords: str, items: list[dict]) ->
             messages=[{"role":"system","content":system},{"role":"user","content":user}],
             temperature=0.2,
         )
-        return resp.choices[0].message.content.strip()
-    except Exception as e:
+        return _strip_think(resp.choices[0].message.content.strip())
+    except Exception:
         lines = [f"Top {len(simple)} matches for '{keywords}':"]
         for it in simple:
             nm = it.get("name") or "(name)"
