@@ -7,6 +7,11 @@ MODEL       = os.getenv("OLLAMA_MODEL", "qwen3:0.6b")
 
 client = OpenAI(base_url=OLLAMA_BASE, api_key=OLLAMA_KEY)
 
+THINK_BLOCK = re.compile(r"(?is)<think>.*?</think>\s*")  # DOTALL + case-insensitive
+
+def _strip_think(text: str) -> str:
+    return THINK_BLOCK.sub("", text or "").strip()
+
 def _extract_json(text: str) -> dict:
     m = re.search(r"\{.*\}", text, flags=re.S)
     raw = m.group(0) if m else text
@@ -69,7 +74,7 @@ def summarize_products(original_query: str, keywords: str, items: list[dict]) ->
             messages=[{"role":"system","content":system},{"role":"user","content":user}],
             temperature=0.2,
         )
-        return resp.choices[0].message.content.strip()
+        return _strip_think(resp.choices[0].message.content.strip())
     except Exception as e:
         lines = [f"Top {len(simple)} matches for '{keywords}':"]
         for it in simple:
