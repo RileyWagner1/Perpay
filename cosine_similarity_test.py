@@ -80,6 +80,7 @@ def get_top_similar_items(
     top_k: int = 200,
     price_col: str = "current_price",
     return_intermediates: bool = False,
+    anchor_drop: bool = True,   # <-- NEW: set to False for query-by-example UIs
 ) -> Tuple[pd.DataFrame, Optional[Dict[str, pd.DataFrame]]]:
     """
     Compute top-k products most similar (cosine over TF-IDF of name/brand/categories)
@@ -96,22 +97,16 @@ def get_top_similar_items(
     price_col : str, default "current_price"
         Price column name (if present).
     return_intermediates : bool, default False
-        If True, also return a dict of intermediates (d1, d2, corpus_df, vectorizer, X).
+        If True, also return intermediates (d1, d2, corpus_df, vectorizer, X).
+    anchor_drop : bool, default True
+        If True, remove anchors from results. Set to False for query-by-example (keep anchors).
 
     Returns
     -------
     topN : pd.DataFrame
         DataFrame of top-k similar items with a 'similarity' column.
     extras : dict or None
-        If `return_intermediates=True`, returns:
-            {
-              "d1": anchor DataFrame,
-              "d2": price-filtered DataFrame,
-              "corpus_df": TF-IDF corpus DataFrame (with 'search_text'),
-              "vectorizer": fitted TfidfVectorizer,
-              "X": sparse TF-IDF matrix (scikit-learn)
-            }
-        else None.
+        If `return_intermediates=True`, returns a dict with d1, d2, corpus_df, vectorizer, X.
     """
     # Build TF-IDF corpus
     corpus_df = products_df.copy()
@@ -168,13 +163,14 @@ def get_top_similar_items(
     d2_corpus = d2_corpus.copy()
     d2_corpus["similarity"] = sims
 
-    # Exclude anchors from results
-    if "product_id" in d1_corpus.columns and "product_id" in d2_corpus.columns:
-        exclude_ids = set(d1_corpus["product_id"].tolist())
-        d2_corpus = d2_corpus[~d2_corpus["product_id"].isin(exclude_ids)]
-    else:
-        exclude_names = set(d1_corpus["name"].tolist())
-        d2_corpus = d2_corpus[~d2_corpus["name"].isin(exclude_names)]
+    # Conditionally exclude anchors
+    if anchor_drop:
+        if "product_id" in d1_corpus.columns and "product_id" in d2_corpus.columns:
+            exclude_ids = set(d1_corpus["product_id"].tolist())
+            d2_corpus = d2_corpus[~d2_corpus["product_id"].isin(exclude_ids)]
+        else:
+            exclude_names = set(d1_corpus["name"].tolist())
+            d2_corpus = d2_corpus[~d2_corpus["name"].isin(exclude_names)]
 
     topN = d2_corpus.sort_values("similarity", ascending=False).head(top_k)
 
