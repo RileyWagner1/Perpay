@@ -1,0 +1,9 @@
+product_id,name,brand,current_price,product_url
+1001,Apple MacBook Air 13 M2,apple,1099,https://example.com/macbook-air-m2
+1002,Apple MacBook Pro 14,apple,1999,https://example.com/macbook-pro-14
+1003,Lenovo ThinkPad X1 Carbon,lenovo,1599,https://example.com/x1-carbon
+1004,Dell XPS 13,dell,1299,https://example.com/xps-13
+1005,HP Spectre x360 14,hp,1399,https://example.com/spectre-x360
+1006,Samsung Galaxy Book3 Pro,samsung,1499,https://example.com/galaxy-book3-pro
+1007,Acer Swift 3,acer,799,https://example.com/swift-3
+1008,Asus Zenbook 14,asus,1099,https://example.com/zenbook-14
