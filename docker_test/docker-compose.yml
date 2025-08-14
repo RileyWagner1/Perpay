@@ -1,0 +1,23 @@
+version: "3.9"
+services:
+  service_a:
+    build:
+      context: ./service_a
+    container_name: service_a
+    environment:
+      - SERVICE_NAME=service_a
+      - PEER_URL=http://service_b:8001
+    ports:
+      - "8000:8000"
+    depends_on:
+      - service_b
+
+  service_b:
+    build:
+      context: ./service_b
+    container_name: service_b
+    environment:
+      - SERVICE_NAME=service_b
+      - CALLBACK_URL=http://service_a:8000/ack
+    ports:
+      - "8001:8001"
