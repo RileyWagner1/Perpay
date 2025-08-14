@@ -1,4 +1,4 @@
-import os
+import os, sys, logging
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import List
@@ -8,6 +8,16 @@ CSV_PATH = os.getenv("CSV_PATH", "/data/product_catalog.csv")
 NAME_COL = os.getenv("NAME_COL", "name")
 
 app = FastAPI(title="Cosine Similarity Backend")
+
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+
+# Configure root logger to emit INFO (or DEBUG) to stdout
+root = logging.getLogger()
+if not root.handlers:
+    h = logging.StreamHandler(sys.stdout)
+    h.setFormatter(logging.Formatter("%(asctime)s %(levelname)s [%(name)s] %(message)s"))
+    root.addHandler(h)
+root.setLevel(getattr(logging, LOG_LEVEL, logging.INFO))
 
 try:
     engine = CosineSearch(CSV_PATH, name_col=NAME_COL)

@@ -3,6 +3,9 @@ import pandas as pd
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import linear_kernel
+import logging
+
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 
 class CosineSearch:
     def __init__(self, csv_path: str, name_col: str | None = None):
@@ -29,5 +32,6 @@ class CosineSearch:
         sims = linear_kernel(q_vec, self.X).ravel()
         idx = np.argsort(-sims)[:top_k]
         out = self.df.iloc[idx].copy()
+        logging.info(f'here!!!  {out.shape}')
         out.insert(0, "similarity", np.round(sims[idx], 4))
         return out.to_dict(orient="records")
