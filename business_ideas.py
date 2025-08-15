@@ -18,12 +18,9 @@ def normalize(series: pd.Series) -> pd.Series:
     scaled = scaler.fit_transform(values).flatten()
     return pd.Series(scaled, index=series.index)
 
-# weights - a * similarity + b * margin
+# weights - a * similarity + b * margin + c * recency - d * return_rate
 # k - top 5
 # pin_anchor - our anchor product (like main reference position or relevant product which will be compared with)
-# enforce_same_category makes sure to filter out by deepest categories (child category not parent)
-# similarity_quantile - select only top 60 from the deepest group that we extracted
-# min_similarity floor - avoid least similar products
 
 def rerank_by_business_score(topN: pd.DataFrame) -> pd.DataFrame:
     """
@@ -64,8 +61,14 @@ def rerank_by_business_score(topN: pd.DataFrame) -> pd.DataFrame:
         config.W_REFUND_RISK * df["return_rate"]
     )
 
-    # Sort by score
-    df = df.sort_values("business_score", ascending=False).reset_index(drop=True)
+    # anchor-pin the original first row
+    if len(df) > 1:
+        anchor = df.iloc[[0]] 
+        rest = df.iloc[1:].sort_values("business_score", ascending=False)
+        # sort the rest by business_score
+        df = pd.concat([anchor, rest], ignore_index=True)
+    else:
+        df = df.sort_values("business_score", ascending=False).reset_index(drop=True)
 
     return df
 
