@@ -1,2 +1,0 @@
-# Perpay
-UD Street Hackathon
